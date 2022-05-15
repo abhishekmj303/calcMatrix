@@ -26,13 +26,21 @@ def show(matrix):
         log("]")
     log()
 
-def to_last(matrix, row):
+def to_last(matrix, row, col):
+    change = 0
     for k in range(len(matrix)-1, row, -1):
-        if matrix[k][row] != Fraction(0):
+        if matrix[k][col] != Fraction(0):
             log("R"+str(row+1)+" <-> R"+str(k+1))
             matrix[row], matrix[k] = matrix[k], matrix[row]
+            change = 1
             break
-    return matrix
+    if change == 1:
+        show(matrix)
+        return (matrix, col)
+    elif col < len(matrix[0])-1:
+        return to_last(matrix, row, col+1)
+    else:
+        return (matrix, col)
 
 n = int(input("Enter number of columns: "))
 m = int(input("Enter number of rows: "))
@@ -54,25 +62,20 @@ show(matrix)
 log("Steps:\n")
 
 # Convert matrix to Echelon form
-for i in range(m):
-    change = 0
+diag = min(n, m)
+for i in range(diag):
+    change, c = 0, i
     if matrix[i][i] == Fraction(0):
-        for k in range(m-1, i, -1):
-            if matrix[k][i] != Fraction(0):
-                log("R"+str(i+1)+" <-> R"+str(k+1))
-                matrix[i], matrix[k] = matrix[k], matrix[i]
-                change = 1
-                break
-        show(matrix)
-        if change == 0:
-            continue
+        matrix, c = to_last(matrix, i, i)
     for j in range(i + 1, m):
-        if matrix[j][i] != Fraction(0):
-            k = matrix[j][i] / matrix[i][i]
+        if matrix[j][c] != Fraction(0):
+            k = matrix[j][c] / matrix[i][c]
             log("R"+str(j+1)+" -> R"+str(j+1)+" - "+fr2str(k)+"*R"+str(i+1))
             for l in range(n):
                 matrix[j][l] -= k * matrix[i][l]
-    show(matrix)
+            change = 1
+    if change == 1:
+        show(matrix)
 
 log("Echelon form:")
 show(matrix)
@@ -96,18 +99,16 @@ show(matrix)
 
 # Make all other elements 0 in pivoted columns
 while len(pivot) > 0:
+    change = 0
     a, b = pivot.pop()
     for i in range(a):
         t = matrix[i][b]
         log("R"+str(i+1)+" -> R"+str(i+1)+" - "+fr2str(t)+"*R"+str(a+1))
         for j in range(b, n):
             matrix[i][j] -= t * matrix[a][j]
-    show(matrix)
-
-# Convert to Echelon form
-for i in range(m):
-    if all(x == Fraction(0) for x in matrix[i]):
-        matrix = to_last(matrix, i)
+        change = 1
+    if change == 1:
+        show(matrix)
 
 # Print Solution
 log("Row reduced Echelon form:")
